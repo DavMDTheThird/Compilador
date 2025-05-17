@@ -1,0 +1,16 @@
+/*Bound checking*/
+
+int x[10];
+int i, y;
+
+int foo(int x[], int a, int b, int c) {
+  /* Should be good, size is dynamic */
+  return x[100000];
+}
+
+void main(void) {
+  x[0] = 1;
+  foo(x);
+  x[i] = x[0]; 
+  x[6 + 4] = 1; /* Should error */
+}
