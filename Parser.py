@@ -1,11 +1,10 @@
-print("Hola Mundo! Esto es el Parser de David Medina Domínguez (A01783155)")
-
 """
-Autor:
-    David Medina Domínguez
-    Matricula: A01783155
-Fecha:
-    28/04/2025
+Autores:
+    - David Medina Domínguez
+        Matricula: A01783155
+    - Juan Pablo Cruz Rodríguez
+        Matricula: A01783208
+
 Objetivo:
     Creación de un parser basico para el lenguaje de C-
 
