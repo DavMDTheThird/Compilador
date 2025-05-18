@@ -54,17 +54,17 @@ class TableElement:
 class SymbolTable:
     def __init__(self, name="Global"):
         self.name = name
-        self.symbols = []  # List of TableElement objects
+        self.elements = []  # List of TableElement objects
 
     def add_symbol(self, symbol, line=None, type_=None, param=None, size=None, return_=None):
         elem = TableElement(symbol, line, type_, param, size, return_)
-        self.symbols.append(elem)
+        self.elements.append(elem)
 
-    def get_symbol(self, symbol):
-        for elem in self.symbols:
-            if elem.symbol == symbol:
-                return elem
-        return None
+    # def get_symbol(self, symbol):
+    #     for elem in self.elements:
+    #         if elem.symbol == symbol:
+    #             return elem
+    #     return None
 
     def __str__(self):
         output = f"\nBlock {self.name}:\n"
@@ -74,15 +74,20 @@ class SymbolTable:
             output += str(elem) + "\n"
         return output
 
+def get_name_var(node):
+    name = None
+    type = None
 
-def get_params(node):
-    param_type = None
-    param_value = None
-
+    # match = next((x for x in node.children if x.symbol == PT.type_specifier), None)
     print(f"zzzzzzzzzzzzzzz:", end=" ")
     for child in node.children[:-1]:
         print(f"{child.symbol}", end=", ")
     print(f"{node.children[-1].symbol}")
+
+
+def get_params(node):
+    param_type = None
+    param_value = None
 
     match = next((x for x in node.children if x.symbol == PT.type_specifier), None)
     # Esta recursion le agrega seguridad de que no le vaya a llegar un nodo sin hijos
@@ -131,21 +136,23 @@ def is_function(node):
         return False, param_lst
 
 
-
 def pre_order(node, declaration = False, state = TokenType.UNDECLARED):
-    global symbol_tables
 
     if node is None:
         return
     
     if declaration == False and node.symbol == PT.dec:
+
+        table = SymbolTable()
+
         declaration = True
-        symbol_tables.append({})
         print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
 
+        a, b = get_name_var()
         a, b = is_function(node)
         if a:
             print(f"I've found a function with {len(b)} parameters: ")
+            table.elements.append(TableElement())
             if b:
                 for i in b:
                     print(i)
@@ -159,6 +166,7 @@ def pre_order(node, declaration = False, state = TokenType.UNDECLARED):
         print(f"YES: {node.symbol}")
 
         if node.symbol == PT.dec_list:
+
             declaration = False
 
     else:
@@ -172,7 +180,7 @@ def pre_order(node, declaration = False, state = TokenType.UNDECLARED):
 
 
 # --------------------------------------------------------------------------------------------------------------
-# Tree =  Abstract Syntax Tree
+# tree_root =  Abstract Syntax Tree
 # La salida genera una tabla o tablas de símbolos, una por cada bloque
 def tabla(tree_root, imprime=True):
     global symbol_tables
@@ -197,16 +205,16 @@ def tabla(tree_root, imprime=True):
 
 
 # --------------------------------------------------------------------------------------------------------------
-# Tree =  Abstract Syntax Tree
+# tree_root =  Abstract Syntax Tree
 # Se llama a la funcion tabla(tree) para obtener la tabla de simbolos
 # Usando reglas lógicas de inferencia para implementar la semántica de C‐
-def semantica(tree, imprime = True):
+def semantica(tree_root, imprime = True):
     """
     Main semantic analysis function.
     Returns True if no type errors found, False otherwise.
     """
     # Build symbol tables
-    symbol_tables = tabla(tree, imprime)
+    symbol_tables = tabla(tree_root, imprime)
     
     print("\nChequeo de tipos\n" + "-"*50)
     
