@@ -139,40 +139,42 @@ def is_function(node):
         return False, param_lst
 
 
-def pre_order(node, declaration = False, new_table = None):
+def pre_order(node, declaration = False, new_table = None, endTableElement = None):
 
     if node is None:
         return
-    
+
     if declaration == False and node.symbol == PT.dec:
 
         new_table = SymbolTable()
 
         declaration = True
-        print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+        print(f"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA: {node.symbol}")
 
         node_type, node_val =  get_VarParam_info(node)
         a, b = is_function(node)
         if a:
-            print(f"I've found a function with {len(b)} parameters: ")
             new_table.elements.append(TableElement(node_val, node_type, None, b, None, node_type))
-            if b:
-                for i in b:
-                    print(i)
-
             print(new_table)
+            # print(f"I've found a function with {len(b)} parameters: ")
+            # if b:
+            #     for i in b:
+            #         print(i)
+            test = next((x for x in node.children if x.symbol == PT.dec_p), None)
+            debug_print(test)
+            test2 = next((x for x in test.children if x.symbol == PT.compound_stmt), None)
+            debug_print(test2)
+            test3 = next((x for x in test2.children if x.symbol == "}"), None)
+            print(f"FOUNDDDDDDDDDDDDDDDDDDDDDDDDD_____: {test3.symbol}")
+            endTableElement = test3
 
-        debug_print(node)
 
     if declaration:
-
-
-        print(f"YES: {node.symbol}")
-
-        # if node.symbol == PT.dec_list:
-        #     print("ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ")
-        #     symbol_tables.append(table)
-        #     declaration = False
+        if node == endTableElement:
+            print(f"MATCHHHHHHHHHHHHHHHHHHHHHHHH_____: {node.symbol}")
+            symbol_tables.append(new_table)
+        else:
+            print(f"YES: {node.symbol}")
 
     else:
         print(f"NOT: {node.symbol}")
@@ -181,7 +183,10 @@ def pre_order(node, declaration = False, new_table = None):
     
     # Traverse children
     for child in node.children:
-        pre_order(child, declaration, new_table)
+        pre_order(child, declaration, new_table, endTableElement)
+
+    # if not node.children:
+    #     print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
 
 
 # --------------------------------------------------------------------------------------------------------------
