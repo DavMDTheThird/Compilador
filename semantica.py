@@ -26,7 +26,7 @@ Instrucciones:
 
 from Parser import *
 
-def globales(prog, pos, long, line_ = 0, symbol_tables_ = [{}]):
+def globales(prog, pos, long, line_ = 0, symbol_tables_ = []):
     global programa, posicion, progLong, line, symbol_tables
     programa = prog
     posicion = pos
@@ -38,7 +38,7 @@ def globales(prog, pos, long, line_ = 0, symbol_tables_ = [{}]):
 
 # Elemento de la tabla de simbolos -------------------------------------------------------------------
 class TableElement:
-    def __init__(self, symbol, line=None, type_=None, param=None, size=None, return_=None):
+    def __init__(self, symbol, type_=None, line=None, param=None, size=None, return_=None):
         self.symbol = symbol
         self.line = line
         self.type = type_
@@ -47,8 +47,13 @@ class TableElement:
         self.return_ = return_
 
     def __str__(self):
-        return (f"{self.symbol:<15} | {str(self.type):<10} | {str(self.line):<5} | "
-                f"{str(self.param):<10} | {str(self.size):<5} | {str(self.return_):<10}")
+        def fmt(val):
+            if isinstance(val, list):
+                # Format parameters as "type name"
+                return ", ".join(f"{t} {n}" for t, n in val)
+            return "----" if val is None else str(val)
+        return (f"{fmt(self.symbol):<10} | {fmt(self.type):<8} | {fmt(self.line):<5} | "
+                f"{fmt(self.param):<30} | {fmt(self.size):<5} | {fmt(self.return_):<10}")
 
 # Tabla de simbolos ----------------------------------------------------------------------------------
 class SymbolTable:
@@ -68,38 +73,34 @@ class SymbolTable:
 
     def __str__(self):
         output = f"\nBlock {self.name}:\n"
-        output += f"{'Symbol':<15} | {'Type':<10} | {'Line':<5} | {'Param':<10} | {'Size':<5} | {'Return':<10}\n"
-        output += "-" * 70 + "\n"
-        for elem in self.symbols:
+        output += f"{'Symbol':<10} | {'Type':<8} | {'Line':<5} | {'Parameters':<30} | {'Size':<5} | {'Return':<10}\n"
+        output += "-" * 100 + "\n"
+        for elem in self.elements:
             output += str(elem) + "\n"
         return output
 
-def get_name_var(node):
-    name = None
-    type = None
-
-    # match = next((x for x in node.children if x.symbol == PT.type_specifier), None)
-    print(f"zzzzzzzzzzzzzzz:", end=" ")
+def debug_print(node):
+    match = next((x for x in node.children if x.symbol == PT.type_specifier), None)
+    print(f"UNUNUNUNUNUNUNUNUNUNUNUNUNUNNUN:", end=" ")
     for child in node.children[:-1]:
         print(f"{child.symbol}", end=", ")
     print(f"{node.children[-1].symbol}")
 
 
-def get_params(node):
-    param_type = None
-    param_value = None
+def get_VarParam_info(node):
+    type = None
+    value = None
 
     match = next((x for x in node.children if x.symbol == PT.type_specifier), None)
     # Esta recursion le agrega seguridad de que no le vaya a llegar un nodo sin hijos
     if match and match.children:
-        if match.children[0].children:
-            param_type = match.children[0].children[0]
+        type = match.children[0].symbol
 
     match = next((x for x in node.children if x.symbol == TokenType.ID), None)
     if match and match.children:
-        param_value = match.children[0]
+        value = match.children[0].symbol
 
-    return param_type, param_value
+    return type, value
 
 
 def is_function(node):
@@ -117,7 +118,8 @@ def is_function(node):
 
                 param = next((x for x in match.children if x.symbol == PT.param), None)
                 if param:
-                    param_lst.append([get_params(param)])
+                    param_type, param_val = get_VarParam_info(param)
+                    param_lst.append([param_type, param_val])
 
                 # Itera por todas las N cantidad de parametros
                 match = next((x for x in match.children if x.symbol == PT.param_list_p), None)
@@ -125,7 +127,8 @@ def is_function(node):
 
                     param = next((x for x in match.children if x.symbol == PT.param), None)
                     if param:
-                        param_lst.append([get_params(param)])
+                        param_type, param_val = get_VarParam_info(param)
+                        param_lst.append([param_type, param_val])
 
                     match = next((x for x in match.children if x.symbol == PT.param_list_p), None)
 
@@ -136,38 +139,40 @@ def is_function(node):
         return False, param_lst
 
 
-def pre_order(node, declaration = False, state = TokenType.UNDECLARED):
+def pre_order(node, declaration = False, new_table = None):
 
     if node is None:
         return
     
     if declaration == False and node.symbol == PT.dec:
 
-        table = SymbolTable()
+        new_table = SymbolTable()
 
         declaration = True
         print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
 
-        a, b = get_name_var()
+        node_type, node_val =  get_VarParam_info(node)
         a, b = is_function(node)
         if a:
             print(f"I've found a function with {len(b)} parameters: ")
-            table.elements.append(TableElement())
+            new_table.elements.append(TableElement(node_val, node_type, None, b, None, node_type))
             if b:
                 for i in b:
                     print(i)
 
+            print(new_table)
+
+        debug_print(node)
+
     if declaration:
-
-
-
 
 
         print(f"YES: {node.symbol}")
 
-        if node.symbol == PT.dec_list:
-
-            declaration = False
+        # if node.symbol == PT.dec_list:
+        #     print("ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ")
+        #     symbol_tables.append(table)
+        #     declaration = False
 
     else:
         print(f"NOT: {node.symbol}")
@@ -176,7 +181,7 @@ def pre_order(node, declaration = False, state = TokenType.UNDECLARED):
     
     # Traverse children
     for child in node.children:
-        pre_order(child, declaration, state)
+        pre_order(child, declaration, new_table)
 
 
 # --------------------------------------------------------------------------------------------------------------
@@ -187,18 +192,11 @@ def tabla(tree_root, imprime=True):
 
     pre_order(tree_root[0])
 
-    print(symbol_tables)
     
     if imprime:
         print("\nSymbol Tables:")
-        for i, table in enumerate(symbol_tables):
-            block_name = "Block Global" if i == 0 else f"Block {i}"
-            print(f"\n{block_name}:")
-            print(f"{'Symbol':<15} | {'Type':<10} | {'Lines'}")
-            print("-" * 45)
-            for symbol, (symbol_type, lines) in table.items():
-                type_str = symbol_type if symbol_type else "Unknown"
-                print(f"{symbol:<15} | {type_str:<10} | {', '.join(map(str, lines))}")
+        for table in symbol_tables:
+            print(table)
 
     return symbol_tables
 
@@ -216,5 +214,4 @@ def semantica(tree_root, imprime = True):
     # Build symbol tables
     symbol_tables = tabla(tree_root, imprime)
     
-    print("\nChequeo de tipos\n" + "-"*50)
-    
+    # print("\nChequeo de tipos\n" + "-"*50)
