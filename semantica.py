@@ -51,11 +51,11 @@ class DecElement:
             arr_str = "[]"
         elif self.arr:
             arr_str = "[" + self.arr + "]"
-        return f"{main_type} {self.symbol}{arr_str}"
+        return f"{main_type} {self.symbol}{arr_str}"        
 
 # Elemento de la tabla de simbolos -------------------------------------------------------------------
 class TableElement:
-    def __init__(self, symbol, type=None, line=None, param=None, size=None, returnE=None):
+    def __init__(self, symbol:DecElement, type=None, line=None, param=None, size=None, returnE=None):
         self.symbol = symbol
         self.line = line
         self.type = type
@@ -63,10 +63,21 @@ class TableElement:
         self.size = size
         self.returnE = returnE
 
+    def printName(symb : DecElement):
+        # Only print the first type (e.g., "int"), ignore "array"
+        arr_str = ""
+        if symb.arr == 0:
+            arr_str = "[]"
+        elif symb.arr:
+            arr_str = "[" + symb.arr + "]"
+        return f"{symb.symbol}{arr_str}"
+
+
     def __str__(self):
         def fmt(val):
             if isinstance(val, list):
-                return ", ".join(str(p) for p in val)
+                # Now each param is [DecElement, element_form], print only the DecElement
+                return ", ".join(str(p[0]) if isinstance(p, list) and len(p) > 0 else str(p) for p in val)
             if isinstance(val, DecElement):
                 return str(val)
             return "----" if val is None else str(val)
@@ -103,7 +114,7 @@ def debug_print(node, lst = []):
         print("ERROR: not found")
         nodetest = node
 
-    print(f"UNUNUNUNUNUNUNUNUNUNUNUNUNUNNUN:", end=" ")
+    print(f"UNUNUNUNUNUNUNUNUNUNUNUNUNUNNUN~{node.symbol}:", end=" ")
     for child in nodetest.children:
         print(f"{child.symbol}", end=", ")
     print("")
@@ -125,31 +136,27 @@ def get_node(node, lst = []):
     return nodetest
 
 def get_VarParam_info(node):
-    type = []
-    value = None
-    array = ""
+    type = None
 
-    match = get_node(node, [PT.type_specifier])
-    # Esta recursion le agrega seguridad de que no le vaya a llegar un nodo sin hijos
-    if match and match.children:
-        type.append(match.children[0].symbol)
+    matchType = get_node(node, [PT.type_specifier])
+    if matchType and matchType.children:
+        matchType = matchType.children[0].symbol
 
-    match = get_node(node, [TokenType.ID])
-    if match and match.children:
-        value = match.children[0].symbol
+    matchValue = get_node(node, [TokenType.ID])
+    if matchValue and matchValue.children:
+        matchValue = matchValue.children[0].symbol
         
-        arr_val = is_array(node)
-        if arr_val:
-            type.append("array")
-            print(f"GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG: {type}")
-            # array = "[" + arr_val + "]"
-        elif arr_val == 0:
-            type.append("array")
-            print(f"GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG: {type}")
-            # array = "[]"
+    arr_type = is_array(node)
+    func_type, a = is_function(node)
+    if arr_type or arr_type == 0:
+        type = "array"
 
-    # return type, value + array
-    return type, value
+    elif func_type:
+        type = "function"
+    else:
+        type = "variable"
+
+    return DecElement(matchValue, matchType), type  
 
 def getFuncitondEnd(node):
     return get_node(node, [PT.dec_p, PT.compound_stmt, "}"])            
@@ -165,12 +172,9 @@ def is_function(node):
         if match:
             param = get_node(match, [PT.param])
             if param:
-                # debug_print(param)
+                paramDec, param_Form = get_VarParam_info(param)
 
-                arr_val = is_array(param)
-                param_type, param_val = get_VarParam_info(param)
-
-                param_lst.append(DecElement(param_val, param_type, arr_val))
+                param_lst.append([paramDec, param_Form])
 
             # Itera por todas las N cantidad de parametros
             match = get_node(match, [PT.param_list_p])
@@ -178,9 +182,8 @@ def is_function(node):
 
                 param = get_node(match, [PT.param])
                 if param:
-                    arr_val = is_array(param)
-                    param_type, param_val = get_VarParam_info(param)
-                    param_lst.append(DecElement(param_val, param_type, arr_val))
+                    paramDec, param_Form = get_VarParam_info(param)
+                    param_lst.append([paramDec, param_Form])
 
                 match = get_node(match, [PT.param_list_p])
 
@@ -207,7 +210,7 @@ def is_array(node):
     
     return None
 
-
+# --------------------------------------------------------------------------------------------------------------
 
 def pre_order(node, declaration = False, new_table = None, endTableElement = None):
     nextChildren = node
@@ -219,13 +222,13 @@ def pre_order(node, declaration = False, new_table = None, endTableElement = Non
         print(f"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA: {node.symbol}")
         declaration = True
 
-        node_type, node_val =  get_VarParam_info(node)
+        nodeDec, node_Form =  get_VarParam_info(node)
 
-        new_table = SymbolTable(node_val)
+        new_table = SymbolTable(nodeDec.symbol)
 
         func, func_params = is_function(node)
         if func:
-            new_table.elements.append(TableElement(node_val, node_type, None, func_params, None, node_type))
+            new_table.elements.append(TableElement(nodeDec, node_Form, None, func_params, None, None))
             print(new_table)
             
             # Stop iterating over the function declaration, and continue to its <compund statement>
@@ -237,8 +240,8 @@ def pre_order(node, declaration = False, new_table = None, endTableElement = Non
             print(f"BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB: {node.symbol}")
             for element in func_params:
                 print(element)
-                new_table.elements.append(TableElement(element, 
-                                                       element.type, None, None, None, None))
+                new_table.elements.append(TableElement(element[0], 
+                                                       element[1], None, None, None, None))
 
 
     if declaration:
