@@ -44,9 +44,14 @@ class DecElement:
         self.arr = arr
 
     def __str__(self):
-        # Print as "type symbol[arr]" if arr exists, else "type symbol"
-        arr_str = self.arr if self.arr else ""
-        return f"{self.type} AAAA{self.symbol}{arr_str}"
+        # Only print the first type (e.g., "int"), ignore "array"
+        main_type = self.type[0] if isinstance(self.type, list) and self.type else self.type
+        arr_str = ""
+        if self.arr == 0:
+            arr_str = "[]"
+        elif self.arr:
+            arr_str = "[" + self.arr + "]"
+        return f"{main_type} {self.symbol}{arr_str}"
 
 # Elemento de la tabla de simbolos -------------------------------------------------------------------
 class TableElement:
@@ -61,10 +66,11 @@ class TableElement:
     def __str__(self):
         def fmt(val):
             if isinstance(val, list):
-                # Use DecElement's __str__ for each parameter
                 return ", ".join(str(p) for p in val)
+            if isinstance(val, DecElement):
+                return str(val)
             return "----" if val is None else str(val)
-        return (f"{fmt(self.symbol):<10} | {fmt(self.type):<8} | {fmt(self.line):<5} | "
+        return (f"{fmt(self.symbol):<10} | {fmt(self.type):<12} | {fmt(self.line):<5} | "
                 f"{fmt(self.param):<30} | {fmt(self.size):<5} | {fmt(self.returnE):<10}")
 
 # Tabla de simbolos ----------------------------------------------------------------------------------
@@ -81,7 +87,7 @@ class SymbolTable:
 
     def __str__(self):
         output = f"\nBlock {self.name}:\n"
-        output += f"{'Symbol':<10} | {'Type':<8} | {'Line':<5} | {'Parameters':<30} | {'Size':<5} | {'Return':<10}\n"
+        output += f"{'Symbol':<10} | {'Type':<12} | {'Line':<5} | {'Parameters':<30} | {'Size':<5} | {'Return':<10}\n"
         output += "-" * 100 + "\n"
         for elem in self.elements:
             output += str(elem) + "\n"
@@ -119,14 +125,14 @@ def get_node(node, lst = []):
     return nodetest
 
 def get_VarParam_info(node):
-    type = None
+    type = []
     value = None
     array = ""
 
     match = get_node(node, [PT.type_specifier])
     # Esta recursion le agrega seguridad de que no le vaya a llegar un nodo sin hijos
     if match and match.children:
-        type = match.children[0].symbol
+        type.append(match.children[0].symbol)
 
     match = get_node(node, [TokenType.ID])
     if match and match.children:
@@ -134,10 +140,16 @@ def get_VarParam_info(node):
         
         arr_val = is_array(node)
         if arr_val:
-            print("GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG")
-            array = "[" + arr_val + "]"
+            type.append("array")
+            print(f"GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG: {type}")
+            # array = "[" + arr_val + "]"
+        elif arr_val == 0:
+            type.append("array")
+            print(f"GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG: {type}")
+            # array = "[]"
 
-    return type, value + array
+    # return type, value + array
+    return type, value
 
 def getFuncitondEnd(node):
     return get_node(node, [PT.dec_p, PT.compound_stmt, "}"])            
@@ -225,7 +237,7 @@ def pre_order(node, declaration = False, new_table = None, endTableElement = Non
             print(f"BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB: {node.symbol}")
             for element in func_params:
                 print(element)
-                new_table.elements.append(TableElement(element.symbol, 
+                new_table.elements.append(TableElement(element, 
                                                        element.type, None, None, None, None))
 
 
