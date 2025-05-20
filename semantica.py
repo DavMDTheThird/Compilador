@@ -44,14 +44,14 @@ class DecElement:
         self.arr = arr
 
     def __str__(self):
-        # Only print the first type (e.g., "int"), ignore "array"
-        main_type = self.type[0] if isinstance(self.type, list) and self.type else self.type
         arr_str = ""
         if self.arr == 0:
             arr_str = "[]"
         elif self.arr:
-            arr_str = "[" + self.arr + "]"
-        return f"{main_type} {self.symbol}{arr_str}"        
+            arr_str = f"[{self.arr}]"
+
+        return f"{self.type} {self.symbol}{arr_str}"
+        
 
 # Elemento de la tabla de simbolos -------------------------------------------------------------------
 class TableElement:
@@ -63,38 +63,26 @@ class TableElement:
         self.size = size
         self.returnE = returnE
 
-    def printName(symb : DecElement):
-        # Only print the first type (e.g., "int"), ignore "array"
-        arr_str = ""
-        if symb.arr == 0:
-            arr_str = "[]"
-        elif symb.arr:
-            arr_str = "[" + symb.arr + "]"
-        return f"{symb.symbol}{arr_str}"
-
-
     def __str__(self):
-        def fmt(val):
-            if isinstance(val, list):
-                # Now each param is [DecElement, element_form], print only the DecElement
-                return ", ".join(str(p[0]) if isinstance(p, list) and len(p) > 0 else str(p) for p in val)
-            if isinstance(val, DecElement):
-                return str(val)
-            return "----" if val is None else str(val)
-        return (f"{fmt(self.symbol):<10} | {fmt(self.type):<12} | {fmt(self.line):<5} | "
-                f"{fmt(self.param):<30} | {fmt(self.size):<5} | {fmt(self.returnE):<10}")
+        # Parameters: print as comma-separated DecElement if present
+        if isinstance(self.param, list):
+            params_str = ", ".join(str(p[0]) if isinstance(p, list) else str(p) for p in self.param)
+        else:
+            params_str = "----"
+        symbol_str = f"{self.symbol}" if self.symbol else "----"
+        type_str = str(self.type) if self.type else "----"
+        line_str = str(self.line) if self.line else "----"
+        size_str = str(self.size) if self.size else "----"
+        returnE_str = str(self.returnE) if self.returnE else "----"
+
+        return (f"{symbol_str:<15} | {type_str:<12} | {line_str:<5} | "
+                f"{params_str:<30} | {size_str:<5} | {returnE_str:<10}")
 
 # Tabla de simbolos ----------------------------------------------------------------------------------
 class SymbolTable:
     def __init__(self, name="Global"):
         self.name = name
         self.elements = []  # List of TableElement objects
-
-    # def get_symbol(self, symbol):
-    #     for elem in self.elements:
-    #         if elem.symbol == symbol:
-    #             return elem
-    #     return None
 
     def __str__(self):
         output = f"\nBlock {self.name}:\n"
@@ -156,7 +144,7 @@ def get_VarParam_info(node):
     else:
         type = "variable"
 
-    return DecElement(matchValue, matchType), type  
+    return DecElement(matchValue, matchType, arr_type), type  
 
 def getFuncitondEnd(node):
     return get_node(node, [PT.dec_p, PT.compound_stmt, "}"])            
