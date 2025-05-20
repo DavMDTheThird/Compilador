@@ -79,12 +79,12 @@ class SymbolTable:
             output += str(elem) + "\n"
         return output
 
-def debug_print(node):
-    match = next((x for x in node.children if x.symbol == PT.type_specifier), None)
-    print(f"UNUNUNUNUNUNUNUNUNUNUNUNUNUNNUN:", end=" ")
-    for child in node.children[:-1]:
-        print(f"{child.symbol}", end=", ")
-    print(f"{node.children[-1].symbol}")
+# def debug_print(node):
+#     match = next((x for x in node.children if x.symbol == PT.type_specifier), None)
+#     # #print(f"UNUNUNUNUNUNUNUNUNUNUNUNUNUNNUN:", end=" ")
+#     for child in node.children[:-1]:
+#         #print(f"{child.symbol}", end=", ")
+#     #print(f"{node.children[-1].symbol}")
 
 
 def get_VarParam_info(node):
@@ -149,35 +149,35 @@ def pre_order(node, declaration = False, new_table = None, endTableElement = Non
         new_table = SymbolTable()
 
         declaration = True
-        print(f"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA: {node.symbol}")
+        #print(f"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA: {node.symbol}")
 
         node_type, node_val =  get_VarParam_info(node)
         a, b = is_function(node)
         if a:
             new_table.elements.append(TableElement(node_val, node_type, None, b, None, node_type))
-            print(new_table)
-            # print(f"I've found a function with {len(b)} parameters: ")
+            #print(new_table)
+            # #print(f"I've found a function with {len(b)} parameters: ")
             # if b:
             #     for i in b:
-            #         print(i)
+            #         #print(i)
             test = next((x for x in node.children if x.symbol == PT.dec_p), None)
-            debug_print(test)
+            # debug_print(test)
             test2 = next((x for x in test.children if x.symbol == PT.compound_stmt), None)
-            debug_print(test2)
+            # debug_print(test2)
             test3 = next((x for x in test2.children if x.symbol == "}"), None)
-            print(f"FOUNDDDDDDDDDDDDDDDDDDDDDDDDD_____: {test3.symbol}")
+            #print(f"FOUNDDDDDDDDDDDDDDDDDDDDDDDDD_____: {test3.symbol}")
             endTableElement = test3
 
 
     if declaration:
         if node == endTableElement:
-            print(f"MATCHHHHHHHHHHHHHHHHHHHHHHHH_____: {node.symbol}")
+            #print(f"MATCHHHHHHHHHHHHHHHHHHHHHHHH_____: {node.symbol}")
             symbol_tables.append(new_table)
-        else:
-            print(f"YES: {node.symbol}")
+        # else:
+            #print(f"YES: {node.symbol}")
 
     else:
-        print(f"NOT: {node.symbol}")
+        #print(f"NOT: {node.symbol}")
         pass
 
     
@@ -186,7 +186,7 @@ def pre_order(node, declaration = False, new_table = None, endTableElement = Non
         pre_order(child, declaration, new_table, endTableElement)
 
     # if not node.children:
-    #     print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+    #     #print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
 
 
 # --------------------------------------------------------------------------------------------------------------
@@ -219,4 +219,4 @@ def semantica(tree_root, imprime = True):
     # Build symbol tables
     symbol_tables = tabla(tree_root, imprime)
     
-    # print("\nChequeo de tipos\n" + "-"*50)
+    # #print("\nChequeo de tipos\n" + "-"*50)

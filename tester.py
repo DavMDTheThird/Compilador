@@ -2,7 +2,6 @@ from globalTypes import *
 from Parser import *
 from semantica import *
 
-
 f = open('sample.c-', 'r')
 
 programa = f.read() # lee todo el archivo a compilar
@@ -14,5 +13,8 @@ posicion = 0 # posición del caracter actual del string
 globales(programa, posicion, progLong)
 
 AST = parser(False)
+
+#Imprimimos el AST en inorder
+print("AST:")
 
 semantica(AST, True)
