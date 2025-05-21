@@ -183,7 +183,7 @@ def parser(imprime=True):
             print(f"The program parsed correctly")
 
             if imprime:
-                print_ast2(root_node, imprime)
+                print_ast1(root_node, imprime)
 
             parsing_order = get_order(root_node)
 

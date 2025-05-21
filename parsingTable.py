@@ -207,7 +207,7 @@ parsingTable = [
     [[],[],[],[],[],[],["{", PT.local_decs, PT.stmt_list, "}"],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]],
     [[PT.lambda_pass],[],[],[],[PT.lambda_pass],[],[PT.lambda_pass],[PT.lambda_pass],[],[PT.lambda_pass],[],[PT.lambda_pass],[PT.lambda_pass],[PT.var_dec, PT.local_decs],[PT.var_dec, PT.local_decs],[],[],[],[],[],[],[],[],[],[],[PT.lambda_pass],[PT.lambda_pass],[]],
     [[],[],[],[],[],[],[],[],[],[],[],[],[],[PT.type_specifier, TokenType.ID, PT.var_dec_p],[PT.type_specifier, TokenType.ID, PT.var_dec_p],[],[],[],[],[],[],[],[],[],[],[],[],[]],
-    [[],[],["[", TokenType.NUM, "]", ";"],[],[";"],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]],
+    [[],[],["[", TokenType.NUM, "]", ";"],[],[";"],[",", TokenType.ID, PT.var_dec_p],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]],
     [[PT.stmt, PT.stmt_list],[],[],[],[PT.stmt, PT.stmt_list],[],[PT.stmt, PT.stmt_list],[PT.lambda_pass],[],[PT.stmt, PT.stmt_list],[],[PT.stmt, PT.stmt_list],[PT.stmt, PT.stmt_list],[],[],[],[],[],[],[],[],[],[],[],[],[PT.stmt, PT.stmt_list],[PT.stmt, PT.stmt_list],[]],
     [[PT.expr_stmt],[],[],[],[PT.expr_stmt],[],[PT.compound_stmt],[],[],[PT.selection_stmt],[],[PT.iteration_stmt],[PT.return_stmt],[],[],[],[],[],[],[],[],[],[],[],[],[PT.expr_stmt],[PT.expr_stmt],[]],
     [[PT.expr, ";"],[],[],[],[";"],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[PT.expr, ";"],[PT.expr, ";"],[]],

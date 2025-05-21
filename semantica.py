@@ -24,6 +24,9 @@ Instrucciones:
         de C- en el documento en Bb)
 """
 
+global dev2
+dev2 = False
+
 from Parser import *
 
 def globales(prog, pos, long, line_ = 0, symbol_tables_ = []):
@@ -75,7 +78,7 @@ class TableElement:
         size_str = str(self.size) if self.size else "----"
         returnE_str = str(self.returnE) if self.returnE else "----"
 
-        return (f"{symbol_str:<13} | {type_str:<12} | {line_str:<5} | "
+        return (f"{symbol_str:<13} | {type_str:<10} | {line_str:<10} | "
                 f"{params_str:<30} | {size_str:<5} | {returnE_str:<10}")
 
 # Tabla de simbolos ----------------------------------------------------------------------------------
@@ -86,7 +89,7 @@ class SymbolTable:
 
     def __str__(self):
         output = f"\nBlock {self.name}:\n"
-        output += f"{'Symbol':<13} | {'Type':<12} | {'Line':<5} | {'Parameters':<30} | {'Size':<5} | {'Return':<10}\n"
+        output += f"{'Symbol':<13} | {'Type':<10} | {'Line':<10} | {'Parameters':<30} | {'Size':<5} | {'Return':<10}\n"
         output += "-" * 100 + "\n"
         for elem in self.elements:
             output += str(elem) + "\n"
@@ -200,7 +203,7 @@ def is_decVariable(node):
     
     var_type = get_node(node, [PT.type_specifier]).children[0].symbol
 
-    if get_node(node, [PT.dec_p, ","]) or  get_node(node, [PT.dec_p, ";"]):
+    if get_node(node, [PT.dec_p, ","]) or get_node(node, [PT.dec_p, ";"]):
 
         if get_node(node, [PT.dec_p, "["]):
             varDec = get_node(node, [TokenType.ID]).children[0].symbol
@@ -218,6 +221,26 @@ def is_decVariable(node):
                 node = get_node(node, [PT.dec_p])
             
         return True, var_lst
+    
+    # It does the same as the one before, but within a function (different follow up states)
+    elif get_node(node, [PT.var_dec_p, ","]) or get_node(node, [PT.var_dec_p, ";"]):
+
+        if get_node(node, [PT.var_dec_p, "["]):
+            varDec = get_node(node, [TokenType.ID]).children[0].symbol
+            arr_val = get_node(node, [PT.var_dec_p, TokenType.NUM]).children[0].symbol
+            var_lst.append([DecElement(varDec, var_type, arr_val), "array"])
+
+        else:
+            while node:
+                if get_node(node, [";"]): break
+
+                varDec = get_node(node, [TokenType.ID]).children[0].symbol
+
+                var_lst.append([DecElement(varDec, var_type), "variable"])
+
+                node = get_node(node, [PT.var_dec_p])
+            
+        return True, var_lst
 
     else:
         return False, var_lst
@@ -225,14 +248,14 @@ def is_decVariable(node):
 
 # --------------------------------------------------------------------------------------------------------------
 
-def pre_order(node, declaration = False, new_table = None, endTableElement = None):
+def pre_order(node, declaration = False, new_table:SymbolTable = None, endTableElement = None):
     nextChildren = node
 
     if node is None:
         return
 
     if declaration == False and node.symbol == PT.dec:
-        # print(f"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA: {node.symbol}")
+        # if dev2: print(f"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA: {node.symbol}")
         declaration = True
 
         nodeDec, node_Form =  get_VarParam_info(node)
@@ -243,51 +266,59 @@ def pre_order(node, declaration = False, new_table = None, endTableElement = Non
 
         if func:
             new_table = SymbolTable(nodeDec.symbol)
-            new_table.elements.append(TableElement(nodeDec, node_Form, None, func_params, None, nodeDec.type))
+            new_table.elements.append(TableElement(nodeDec, node_Form, node.line, func_params, None, nodeDec.type))
             # print(new_table)
+            # debug_print(node.parent, [])
             
-            # Stop iterating over the function declaration, and continue to its <compund statement>
+
+            # This is to add the final table at the end of the funciton
             endTableElement = get_node(node, [PT.dec_p, PT.compound_stmt, "}"])
+            # Stop iterating over the function declaration, and continue to its <compund statement>
             match = get_node(node, [PT.dec_p, PT.compound_stmt])
             if match:
                 nextChildren = match
 
             for element in func_params:
-                new_table.elements.append(TableElement(element[0], element[1], None, None, None, None))
+                new_table.elements.append(TableElement(element[0], element[1], node.line, None, None, None))
 
         elif decVar:
-            # endTableElement = getFuncitondEnd(node)
+            # Don't Iterate over what already was processed
             nextChildren.children = []
-
+            # endTableElement = getFuncitondEnd(node)
 
             if not new_table:
                 for element in decVar_lst:
-                    if element[1]:
-                        symbol_tables[0].elements.append(TableElement(element[0], element[1], None, None, element[0].arr, None))
-                    else:
-                        symbol_tables[0].elements.append(TableElement(element[0], element[1], None, None, None, None))
+                    symbol_tables[0].elements.append(TableElement(element[0], element[1], node.line, None, element[0].arr, None))
             else:
+                print("                                          LO DUDO                                                               ")
                 # Aqui agregar a la subtabla new_table (por si se define una funcion adentro de una funcion)
                 pass
 
 
-    if declaration:
+    elif declaration:
         if node == endTableElement:
             symbol_tables.append(new_table)
-            print(f"YES: {node.symbol}")
         
         else:
-            # if node.symbol == PT.dec:
-                # print(f"FOUNDDDDDDDDDDDDDDD NEWWWWWWWWWWW: {node.symbol}")
+            # basically: the local_dec, var_dec that are inside a function
+            if node.symbol == PT.var_dec:
+                # test = get_node(node, [TokenType.ID]).children[0].symbol
+                # print(f"FOUNDDDDDDDDDDDDDDD NEWWWWWWWWWWW: {test}")
                 # nodeDec, node_Form = get_VarParam_info(node)
                 # print(f"{nodeDec} ~ {node_Form}")
+
+                decVar, decVar_lst = is_decVariable(node)
+                for decElem in decVar_lst:
+                    new_table.elements.append(TableElement(decElem[0], decElem[1], node.line, None, decElem[0].arr, None))
+
+                nextChildren.children = []
                     
 
-            print(f"YES: {node.symbol}")
+            if dev2: print(f"YES: {node.symbol}")
             pass
 
     else:
-        print(f"NOT: {node.symbol}")
+        # if True: print(f"{node.line}. NOT: {node.symbol}")
         pass
 
     
@@ -296,7 +327,7 @@ def pre_order(node, declaration = False, new_table = None, endTableElement = Non
         pre_order(child, declaration, new_table, endTableElement)
 
     if not node.children:
-        print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+        if dev2: print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
         pass
 
 

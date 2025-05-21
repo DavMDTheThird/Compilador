@@ -81,7 +81,9 @@ def getToken(imprime = True):
                 token = TokenType.OPS
 
             elif programa[posicion] in TokenType.COMP.value + TokenType.ASG.value and posicion < progLong - 1:
-                if programa[posicion+1] == "=":
+                if programa[posicion] in TokenType.COMP.value:
+                    token = TokenType.COMP
+                elif programa[posicion+1] == "=":
                     token = TokenType.COMP
                 else:
                     tokenString += programa[posicion]
