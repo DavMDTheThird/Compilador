@@ -28,6 +28,8 @@ global dev2
 dev2 = False
 
 from Parser import *
+import copy
+
 
 def globales(prog, pos, long, line_ = 0, symbol_tables_ = []):
     global programa, posicion, progLong, line, symbol_tables
@@ -45,6 +47,7 @@ class DecElement:
         self.symbol = symbol
         self.type = type
         self.arr = arr
+        self.dec = None
 
     def __str__(self):
         arr_str = ""
@@ -147,8 +150,7 @@ def get_VarParam_info(node):
     else:
         type = "variable"
 
-    return DecElement(matchValue, matchType, arr_type), type  
-
+    return DecElement(matchValue, matchType, arr_type), type
 
 def is_function(node):
     param_lst = []
@@ -249,7 +251,7 @@ def is_decVariable(node):
 # --------------------------------------------------------------------------------------------------------------
 
 def pre_order(node, declaration = False, new_table:SymbolTable = None, endTableElement = None):
-    nextChildren = node
+    nextChildren = copy.copy(node)
 
     if node is None:
         return
@@ -338,7 +340,7 @@ def tabla(tree_root, imprime=True):
     global symbol_tables
     symbol_tables.append(SymbolTable()) # Add the global table
 
-    pre_order(tree_root[0])
+    pre_order(tree_root)
     
     if imprime:
         print("\nSymbol Tables:")
@@ -350,6 +352,24 @@ def tabla(tree_root, imprime=True):
 
 
 # --------------------------------------------------------------------------------------------------------------
+def semantic_preStep(node, inTable:SymbolTable = None):
+    nextChildren = copy.copy(node)
+    if node is None:
+        return
+    
+
+    if node.symbol == TokenType.ID:
+        print(f"{node.line}. {node.children[0].symbol}")
+
+    # Traverse children
+    for child in nextChildren.children:
+        semantic_preStep(child)
+    
+    return
+
+
+
+
 # tree_root =  Abstract Syntax Tree
 # Se llama a la funcion tabla(tree) para obtener la tabla de simbolos
 # Usando reglas lógicas de inferencia para implementar la semántica de C‐
@@ -359,6 +379,8 @@ def semantica(tree_root, imprime = True):
     Returns True if no type errors found, False otherwise.
     """
     # Build symbol tables
-    symbol_tables = tabla(tree_root, imprime)
+    symbol_tables = tabla(tree_root[0], imprime)
+
+    semantic_preStep(tree_root[0])
     
     # print("\nChequeo de tipos\n" + "-"*50)
