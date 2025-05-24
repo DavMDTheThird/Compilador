@@ -15,4 +15,4 @@ globales(programa, posicion, progLong)
 
 AST = parser(False)
 
-semantica(AST, False)
+semantica(AST, True)

@@ -4,7 +4,7 @@
   int x[10];
 
   int minloc ( int a[], int low, int high )
-  { int i; int x; int k;
+  { int i; int x; int k, z;
     int a = 5;
     k = low;
     x = a[low];
@@ -32,6 +32,12 @@
       }
   }
 
+  void test(void){
+    int x, high, iterator;
+    int y[10];
+    minloc(y,x,high);
+  }
+
   void main(void)
   { int i;
     i = 0;
@@ -41,7 +47,7 @@
     sort(x,0,10);
     i = 0;
     while (i < 10)
-      { output(x[i]);
+      { output(x[3]);
         i = i + 1; }
   }
 
