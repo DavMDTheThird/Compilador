@@ -547,6 +547,9 @@ def semantic_preStep(node, current_function_table=None):
     # Check array operations
     check_array_operations(node, current_function_table)
 
+    # Check return statements
+    check_return_statements(node, current_function_table)
+
     # Traverse children
     for child in node.children:
         # If we enter a function definition, pass its symbol table
@@ -581,9 +584,81 @@ def find_id_or_num(node):
             return result
     return None
 
+def has_return_statement(node):
+    """Check if a compound statement contains a return statement"""
+    if not node:
+        return False
+        
+    if node.symbol == PT.return_stmt:
+        return True
+        
+    for child in node.children:
+        if has_return_statement(child):
+            return True
+            
+    return False
+
 def check_return_statements(node, current_function_table):
     """Check return statement compatibility with function type"""
-    pass
+    if not current_function_table:
+        return  # Skip if not in a function
+
+    # Get function's declared return type
+    func_name = current_function_table.name
+    func_info = None
+    for elem in symbol_tables[0].elements:
+        if elem.symbol.symbol == func_name and elem.type == "function":
+            func_info = elem
+            break
+    
+    if not func_info:
+        return  # Skip if function info not found
+
+    return_type = func_info.returnE
+
+    # If this is a return statement
+    if node.symbol == PT.return_stmt:
+        # Look for return value in return_stmt_p
+        return_expr = None
+        for child in node.children:
+            if child.symbol == PT.return_stmt_p:
+                if child.children:
+                    for c in child.children:
+                        if c.symbol == PT.expr:
+                            return_expr = c
+                            break
+        
+        if return_type == "void":
+            if return_expr:
+                print(f"Error: Void function '{func_name}' cannot return a value on line {node.line}")
+        else:
+            if not return_expr:
+                print(f"Error: Non-void function '{func_name}' must return a value on line {node.line}")
+            else:
+                # Get the type of the returned expression
+                expr_node = find_id_or_num(return_expr)
+                if expr_node:
+                    if expr_node.symbol == TokenType.ID:
+                        # Variable return
+                        var_name = expr_node.children[0].symbol
+                        var_type, var_is_array = get_variable_info(var_name, current_function_table)
+                        
+                        if var_type is None:
+                            print(f"Error: Undefined variable '{var_name}' in return statement on line {node.line}")
+                        elif var_type != return_type:
+                            print(f"Error: Function '{func_name}' returns {return_type} but got {var_type} on line {node.line}")
+                        elif var_is_array:
+                            print(f"Error: Cannot return array '{var_name}' from function '{func_name}' on line {node.line}")
+                    
+                    elif expr_node.symbol == TokenType.NUM:
+                        # Number literal return
+                        if return_type != "int":
+                            print(f"Error: Function '{func_name}' returns {return_type} but got int literal on line {node.line}")
+
+    # Check if we're at the end of a function definition
+    elif node.symbol == PT.compound_stmt and node.parent and node.parent.symbol == PT.dec_p:
+        if return_type != "void" and not has_return_statement(node):
+            print(f"Error: Non-void function '{func_name}' must have a return statement")
 
 def check_arithmetic_operations(node, current_function_table):
     """Check type compatibility in arithmetic expressions"""
