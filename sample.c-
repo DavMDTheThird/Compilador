@@ -32,10 +32,14 @@
       }
   }
 
+  void f(void){return ;}
   void test(void){
-    int x, high, iterator;
-    int y[10];
-    minloc(y,x,high);
+    int a[10];
+    int b;
+    int x;
+
+    x = a + b;        /* Error: Cannot use array 'a' in arithmetic operation '+' */
+    x = f() * 5;      /* Error: Cannot use void value in arithmetic operation '*' */
   }
 
   void main(void)

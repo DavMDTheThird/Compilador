@@ -550,6 +550,9 @@ def semantic_preStep(node, current_function_table=None):
     # Check return statements
     check_return_statements(node, current_function_table)
 
+    # Check arithmetic operations
+    check_arithmetic_operations(node, current_function_table)
+
     # Traverse children
     for child in node.children:
         # If we enter a function definition, pass its symbol table
@@ -662,7 +665,118 @@ def check_return_statements(node, current_function_table):
 
 def check_arithmetic_operations(node, current_function_table):
     """Check type compatibility in arithmetic expressions"""
-    pass
+    # Check additive expressions (+ -)
+    if node.symbol == PT.additive_expr_p:
+        # Look for operator in addop node
+        addop_node = get_node(node, [PT.addop])
+        if addop_node and addop_node.children:
+            operator = addop_node.children[0].symbol
+            if operator in ['+', '-']:
+                # Get left operand from parent's term
+                left_operand = get_node(node.parent, [PT.term])
+                # Get right operand
+                right_operand = get_node(node, [PT.term])
+                
+                if left_operand and right_operand:
+                    check_operand_compatibility(left_operand, right_operand, operator, node.line, current_function_table)
+
+    # Check multiplicative expressions (* /)
+    elif node.symbol == PT.term_p:
+        # Look for operator in mulop node
+        mulop_node = get_node(node, [PT.mulop])
+        if mulop_node and mulop_node.children:
+            operator = mulop_node.children[0].symbol
+            if operator in ['*', '/']:
+                # Get left operand from parent's factor
+                left_operand = get_node(node.parent, [PT.factor])
+                # Get right operand
+                right_operand = get_node(node, [PT.factor])
+                
+                if left_operand and right_operand:
+                    check_operand_compatibility(left_operand, right_operand, operator, node.line, current_function_table)
+
+def check_operand_compatibility(left_node, right_node, operator, line, current_function_table):
+    """Helper function to check if two operands are compatible for arithmetic operations"""
+    left_info = get_operand_info(left_node, current_function_table)
+    right_info = get_operand_info(right_node, current_function_table)
+    
+    if not left_info or not right_info:
+        return  # Error already reported in get_operand_info
+        
+    left_type, left_is_array, left_name = left_info
+    right_type, right_is_array, right_name = right_info
+    
+    # Check for array operands
+    if left_is_array:
+        print(f"Error: Cannot use array '{left_name}' in arithmetic operation '{operator}' on line {line}")
+        return
+    if right_is_array:
+        print(f"Error: Cannot use array '{right_name}' in arithmetic operation '{operator}' on line {line}")
+        return
+        
+    # Check for void operands
+    if left_type == "void":
+        print(f"Error: Cannot use void value in arithmetic operation '{operator}' on line {line}")
+        return
+    if right_type == "void":
+        print(f"Error: Cannot use void value in arithmetic operation '{operator}' on line {line}")
+        return
+        
+    # Check type compatibility
+    if left_type != right_type:
+        print(f"Error: Type mismatch in arithmetic operation '{operator}' between {left_type} and {right_type} on line {line}")
+
+def get_operand_info(node, current_function_table):
+    """Helper function to get type information about an operand"""
+    # If we get a term node, use its factor child
+    if node.symbol == PT.term:
+        factor_node = get_node(node, [PT.factor])
+        if factor_node:
+            return get_operand_info(factor_node, current_function_table)
+    
+    # Find the actual value node (ID or NUM)
+    id_node = get_node(node, [TokenType.ID])
+    num_node = get_node(node, [TokenType.NUM])
+    
+    if id_node and id_node.children:
+        # Variable operand
+        var_name = id_node.children[0].symbol
+        
+        # Check if it's a function call
+        if get_node(node, [PT.factor_p, "("]):
+            # Find function return type
+            func_type = None
+            for elem in symbol_tables[0].elements:
+                if elem.symbol.symbol == var_name and elem.type == "function":
+                    func_type = elem.returnE
+                    break
+            return func_type, False, var_name
+            
+        # Regular variable
+        var_type, var_is_array = get_variable_info(var_name, current_function_table)
+        
+        if var_type is None:
+            print(f"Error: Undefined variable '{var_name}' used in arithmetic expression")
+            return None
+            
+        # Check if array is being used with indexing
+        factor_p = get_node(node, [PT.factor_p])
+        
+        if var_is_array:
+            # If it's an array, it must be indexed to be used in arithmetic
+            if not (factor_p and factor_p.children and factor_p.children[0].symbol == '['):
+                return var_type, True, var_name  # Mark as array for error reporting
+            else:
+                # Array with indexing is treated as a regular int
+                return var_type, False, f"{var_name}[...]"
+            
+        return var_type, var_is_array, var_name
+        
+    elif num_node and num_node.children:
+        # Number literal operand
+        return "int", False, str(num_node.children[0].symbol)
+        
+    return None
 
 def check_boolean_conditions(node, current_function_table):
     """Check if conditions in if/while statements are valid"""

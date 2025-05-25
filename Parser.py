@@ -157,7 +157,7 @@ def parser(imprime=True):
                     break
                 else:
                     if now_token == TokenType.ERROR:
-                        print(f"Invalid token detected on line : '{now_token_str}', expected token: '{stack[-1]}'")
+                        print(f"Invalid token detected on line {line}: '{now_token_str}', expected token: '{stack[-1]}'")
                         break
 
                     if dev: printStack(stack)

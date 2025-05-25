@@ -239,3 +239,102 @@ parsingTable = [
     [[PT.expr, PT.arg_list_p],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[PT.expr, PT.arg_list_p],[PT.expr, PT.arg_list_p],[]],
     [[],[PT.lambda_pass],[],[],[],[",", PT.expr, PT.arg_list_p],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]],
 ]
+
+"""
+context-free grammar for C-:
+
+<program> ::= <declaration-list>
+
+<declaration-list> ::= <declaration> <declaration-list> | ε
+
+<declaration> ::= <type-specifier> ID <declaration-prime>
+
+<declaration-prime> ::= ';' 
+                      | '[' NUM ']' ';' 
+                      | '(' <params> ')' <compound-stmt> 
+                      | ',' ID <declaration-prime> 
+                      | '=' NUM ';'
+
+<type-specifier> ::= 'int' | 'void'
+
+<params> ::= 'void' | <param-list>
+
+<param-list> ::= <param> <param-list-prime>
+
+<param-list-prime> ::= ',' <param> <param-list-prime> | ε
+
+<param> ::= <type-specifier> ID <param-prime>
+
+<param-prime> ::= '[' ']' | ε
+
+<compound-stmt> ::= '{' <local-declarations> <statement-list> '}'
+
+<local-declarations> ::= <var-declaration> <local-declarations> | ε
+
+<var-declaration> ::= <type-specifier> ID <var-declaration-prime>
+
+<var-declaration-prime> ::= ';' 
+                          | '[' NUM ']' ';' 
+                          | ',' ID <var-declaration-prime> 
+                          | '=' <asg-declaration-prime> ';'
+
+<asg-declaration-prime> ::= ID | NUM
+
+<statement-list> ::= <statement> <statement-list> | ε
+
+<statement> ::= <expression-stmt> 
+              | <compound-stmt> 
+              | <selection-stmt> 
+              | <iteration-stmt> 
+              | <return-stmt>
+
+<expression-stmt> ::= <expression> ';' | ';'
+
+<selection-stmt> ::= 'if' '(' <expression> ')' <statement> <selection-stmt-prime>
+
+<selection-stmt-prime> ::= 'else' <statement> | ε
+
+<iteration-stmt> ::= 'while' '(' <expression> ')' <statement>
+
+<return-stmt> ::= 'return' <return-stmt-prime>
+
+<return-stmt-prime> ::= ';' | <expression> ';'
+
+<expression> ::= <simple-expression> <expression-prime>
+
+<expression-prime> ::= '=' <expression> | ε
+
+<var> ::= ID <var-prime>
+
+<var-prime> ::= '[' <expression> ']' | ε
+
+<simple-expression> ::= <additive-expression> <simple-expression-prime>
+
+<simple-expression-prime> ::= <relop> <additive-expression> | ε
+
+<relop> ::= '<' | '<=' | '>' | '>=' | '==' | '!='
+
+<additive-expression> ::= <term> <additive-expression-prime>
+
+<additive-expression-prime> ::= <addop> <term> <additive-expression-prime> | ε
+
+<addop> ::= '+' | '-'
+
+<term> ::= <factor> <term-prime>
+
+<term-prime> ::= <mulop> <factor> <term-prime> | ε
+
+<mulop> ::= '*' | '/'
+
+<factor> ::= '(' <expression> ')' 
+           | ID <factor-prime> 
+           | NUM
+
+<factor-prime> ::= '(' <args> ')' | <var-prime>
+
+<args> ::= <arg-list> | ε
+
+<arg-list> ::= <expression> <arg-list-prime>
+
+<arg-list-prime> ::= ',' <expression> <arg-list-prime> | ε
+"""
