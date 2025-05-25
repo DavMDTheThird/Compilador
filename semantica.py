@@ -31,13 +31,12 @@ from Parser import *
 import copy
 
 
-def globales(prog, pos, long, line_ = 0, symbol_tables_ = []):
+def globalesSemantica(prog, pos, long, line_ = 0):
     global programa, posicion, progLong, line, symbol_tables
     programa = prog
     posicion = pos
     progLong = long
     line = line_
-    symbol_tables = symbol_tables_
     globalesParser(programa, posicion, progLong)
 
 
@@ -345,6 +344,7 @@ def pre_order(node, declaration = False, new_table:SymbolTable = None, endTableE
 # La salida genera una tabla o tablas de símbolos, una por cada bloque
 def tabla(tree_root, imprime=True):
     global symbol_tables
+    symbol_tables = []
     symbol_tables.append(SymbolTable()) # Add the global table
 
     pre_order(tree_root)
@@ -553,6 +553,9 @@ def semantic_preStep(node, current_function_table=None):
     # Check arithmetic operations
     check_arithmetic_operations(node, current_function_table)
 
+    # Check boolean conditions
+    check_boolean_conditions(node, current_function_table)
+
     # Traverse children
     for child in node.children:
         # If we enter a function definition, pass its symbol table
@@ -760,15 +763,24 @@ def get_operand_info(node, current_function_table):
             return None
             
         # Check if array is being used with indexing
-        factor_p = get_node(node, [PT.factor_p])
+        var_p = get_node(node, [PT.factor_p, PT.var_p])
         
         if var_is_array:
-            # If it's an array, it must be indexed to be used in arithmetic
-            if not (factor_p and factor_p.children and factor_p.children[0].symbol == '['):
-                return var_type, True, var_name  # Mark as array for error reporting
-            else:
-                # Array with indexing is treated as a regular int
-                return var_type, False, f"{var_name}[...]"
+            # If it's an array, check for indexing
+            if var_p and var_p.children:
+                # Check if var_p has the array indexing structure: [ expr ]
+                has_indexing = False
+                if len(var_p.children) >= 3:
+                    if var_p.children[0].symbol == "[" and var_p.children[2].symbol == "]":
+                        expr_node = var_p.children[1]
+                        if expr_node.symbol == PT.expr:
+                            has_indexing = True
+                
+                if has_indexing:
+                    # Array is properly indexed, treat it as a regular int
+                    return var_type, False, f"{var_name}[...]"
+            # Array without indexing
+            return var_type, True, var_name
             
         return var_type, var_is_array, var_name
         
@@ -780,7 +792,62 @@ def get_operand_info(node, current_function_table):
 
 def check_boolean_conditions(node, current_function_table):
     """Check if conditions in if/while statements are valid"""
-    pass
+    # Check selection (if) and iteration (while) statement conditions
+    if node.symbol in [PT.selection_stmt, PT.iteration_stmt]:
+        # Get the condition expression (both have the same structure: '(' expr ')')
+        condition = get_node(node, [PT.expr])
+        if condition:
+            check_condition_validity(condition, node.line, current_function_table)
+
+def check_condition_validity(node, line, current_function_table):
+    """Check if a condition expression is valid"""
+    # Check simple expression (left side of relop)
+    simple_expr = get_node(node, [PT.simple_expr])
+    if not simple_expr:
+        return
+    
+    # Get operand info for left side
+    left_additive_expr = get_node(simple_expr, [PT.additive_expr])
+    if left_additive_expr:
+        left_term = get_node(left_additive_expr, [PT.term])
+        if left_term:
+            left_info = get_operand_info(left_term, current_function_table)
+            if left_info:
+                left_type, left_is_array, left_name = left_info
+                # Check for invalid types in condition
+                if left_is_array:
+                    print(f"Error: Cannot use array '{left_name}' in condition on line {line}")
+                    return
+                if left_type == "void":
+                    print(f"Error: Cannot use void value in condition on line {line}")
+                    return
+    
+    # Check if there's a relational operation
+    simple_expr_p = get_node(simple_expr, [PT.simple_expr_p])
+    if simple_expr_p and simple_expr_p.children:
+        # Look for relop
+        relop = get_node(simple_expr_p, [PT.relop])
+        if relop and relop.children:
+            operator = relop.children[0].symbol
+            # Get right operand (additive expression)
+            right_additive_expr = get_node(simple_expr_p, [PT.additive_expr])
+            if right_additive_expr:
+                right_term = get_node(right_additive_expr, [PT.term])
+                if right_term:
+                    right_info = get_operand_info(right_term, current_function_table)
+                    if right_info:
+                        right_type, right_is_array, right_name = right_info
+                        # Check for invalid types in right operand
+                        if right_is_array:
+                            print(f"Error: Cannot use array '{right_name}' in condition on line {line}")
+                            return
+                        if right_type == "void":
+                            print(f"Error: Cannot use void value in condition on line {line}")
+                            return
+                        # Check type compatibility for relational operation
+                        if left_info and right_info and left_type != right_type:
+                            print(f"Error: Type mismatch in condition using operator '{operator}' between {left_type} and {right_type} on line {line}")
+                            return
 
 def check_assignment_compatibility(node, current_function_table):
     """Check type compatibility in assignments"""

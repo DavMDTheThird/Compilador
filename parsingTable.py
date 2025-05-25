@@ -129,7 +129,7 @@ def get_row(token):
     elif token == PT.arg_list_p:
         return 40
     else:
-        raise ValueError("Unrecognized parser row: ", token)
+        raise ValueError("Unrecognized parser row: " + token)
     
 def get_column(token, token_string):
     # Small custom mapping, based on your parsing table structure

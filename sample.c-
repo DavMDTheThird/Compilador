@@ -38,8 +38,10 @@
     int b;
     int x;
 
-    x = a + b;        /* Error: Cannot use array 'a' in arithmetic operation '+' */
-    x = f() * 5;      /* Error: Cannot use void value in arithmetic operation '*' */
+    while(x < a){
+
+    }
+    return x;
   }
 
   void main(void)
