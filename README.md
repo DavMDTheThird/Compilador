@@ -122,11 +122,11 @@ Para los demas partes del codigo se ejecuta la siguiente linea
 
 ```C
 //lEXER
-python3 test2.py
+python3 test4.py
 //PARSER
 python3 test3.py
 //SEMANTICA
-python3 test4.py
+python3 test2.py
 ```
 
 # 📊 Conclusión
