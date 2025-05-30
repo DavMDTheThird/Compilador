@@ -9,36 +9,51 @@ main:
 	subu $sp, $sp, 4
 	sw $fp, ($sp)
 	move $fp, $sp
-	li $t0, 0
-	li $t1, -20
-	add $t1, $t1, $fp
-	li $t2, 5
-	L0:
-	sw $t0, ($t1)
-	addi $t1, $t1, 4
-	addi $t2, $t2, -1
-	bgtz $t2, L0
-	sw $zero, -24($fp)
-	subu $sp, $sp, 24
+	sw $zero, -4($fp)
+	sw $zero, -8($fp)
+	sw $zero, -12($fp)
+	subu $sp, $sp, 12
 	
-# Loading constant 0
-	li $t3, 0
+# Reading input from user
+	li $v0, 5
+	syscall
+	sw $v0, -4($fp)
 	
-# Loading constant 0
-	li $t4, 0
-	sw $t4, -24($fp)
+# Reading input from user
+	li $v0, 5
+	syscall
+	sw $v0, -8($fp)
 	
-L1:
+# Loading x
+	lw $t0, -4($fp)
 	
-# Loading i
-	lw $t5, -24($fp)
+# Loading y
+	lw $t1, -8($fp)
 	
-# Loading constant 5
-	li $t6, 5
-	slt $t7, $t5, $t6
-	beq $t7, $zero, L2
-	j L1
-	L2:
+# Arithmetic operation: *
+	mul $t2, $t0, $t1
+	
+# Loading x
+	lw $t3, -4($fp)
+	
+# Loading y
+	lw $t4, -8($fp)
+	
+# Arithmetic operation: *
+	mul $t5, $t3, $t4
+	sw $t5, -12($fp)
+	
+# Loading sum
+	lw $t6, -12($fp)
+	
+# Loading sum
+	lw $t7, -12($fp)
+	move $a0, $t7
+	li $v0, 1
+	syscall
+	li $v0, 4
+	la $a0, newline
+	syscall
 	
 # Cleanup main's stack frame
 	move $sp, $fp

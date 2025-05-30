@@ -899,7 +899,7 @@ def semantica(tree_root, imprime = True):
     symbol_tables[0].elements.append(TableElement(input_dec, "function", None, [], None, "int"))
     symbol_tables[0].elements.append(TableElement(output_dec, "function", None, [DecElement("value", "int")], None, "void"))
 
-    print("\nSemantic Check\n" + "-"*50)
+    # print("\nSemantic Check\n" + "-"*50)
 
     semantic_preStep(tree_root[0])
 
