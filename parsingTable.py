@@ -16,6 +16,7 @@ class PT(Enum):             # ParserTypes (PT)
     local_decs = "<local-declarations>"
     var_dec = "<var-declaration>"
     var_dec_p = "<var-declaration-prime>"
+    asg_dec_p = "<asg-declaration-prime>"
     stmt_list = "<statement-list>"          
     stmt = "<statement>"
     expr_stmt = "<expression-stmt>"          
@@ -73,60 +74,62 @@ def get_row(token):
         return 12
     elif token == PT.var_dec_p:
         return 13
-    elif token == PT.stmt_list:
+    elif token == PT.asg_dec_p:
         return 14
-    elif token == PT.stmt:
+    elif token == PT.stmt_list:
         return 15
-    elif token == PT.expr_stmt:
+    elif token == PT.stmt:
         return 16
-    elif token == PT.selection_stmt:
+    elif token == PT.expr_stmt:
         return 17
-    elif token == PT.selection_stmt_p:
+    elif token == PT.selection_stmt:
         return 18
-    elif token == PT.iteration_stmt:
+    elif token == PT.selection_stmt_p:
         return 19
-    elif token == PT.return_stmt:
+    elif token == PT.iteration_stmt:
         return 20
-    elif token == PT.return_stmt_p:
+    elif token == PT.return_stmt:
         return 21
-    elif token == PT.expr:
+    elif token == PT.return_stmt_p:
         return 22
-    elif token == PT.expr_p:
+    elif token == PT.expr:
         return 23
-    elif token == PT.var:
+    elif token == PT.expr_p:
         return 24
-    elif token == PT.var_p:
+    elif token == PT.var:
         return 25
-    elif token == PT.simple_expr:
+    elif token == PT.var_p:
         return 26
-    elif token == PT.simple_expr_p:
+    elif token == PT.simple_expr:
         return 27
-    elif token == PT.relop:
+    elif token == PT.simple_expr_p:
         return 28
-    elif token == PT.additive_expr:
+    elif token == PT.relop:
         return 29
-    elif token == PT.additive_expr_p:
+    elif token == PT.additive_expr:
         return 30
-    elif token == PT.addop:
+    elif token == PT.additive_expr_p:
         return 31
-    elif token == PT.term:
+    elif token == PT.addop:
         return 32
-    elif token == PT.term_p:
+    elif token == PT.term:
         return 33
-    elif token == PT.mulop:
+    elif token == PT.term_p:
         return 34
-    elif token == PT.factor:
+    elif token == PT.mulop:
         return 35
-    elif token == PT.factor_p:
+    elif token == PT.factor:
         return 36
-    elif token == PT.args:
+    elif token == PT.factor_p:
         return 37
-    elif token == PT.arg_list:
+    elif token == PT.args:
         return 38
-    elif token == PT.arg_list_p:
+    elif token == PT.arg_list:
         return 39
+    elif token == PT.arg_list_p:
+        return 40
     else:
-        raise ValueError("Unrecognized parser row: ", token)
+        raise ValueError("Unrecognized parser row: " + token)
     
 def get_column(token, token_string):
     # Small custom mapping, based on your parsing table structure
@@ -197,7 +200,7 @@ parsingTable = [
     [[],[],[],[],[],[],[],[],[],[],[],[],[],[PT.dec_list],[PT.dec_list],[],[],[],[],[],[],[],[],[],[],[],[],[PT.lambda_pass]],
     [[],[],[],[],[],[],[],[],[],[],[],[],[],[PT.dec, PT.dec_list],[PT.dec, PT.dec_list],[],[],[],[],[],[],[],[],[],[],[],[],[PT.lambda_pass]],
     [[],[],[],[],[],[],[],[],[],[],[],[],[],[PT.type_specifier, TokenType.ID, PT.dec_p],[PT.type_specifier, TokenType.ID, PT.dec_p],[],[],[],[],[],[],[],[],[],[],[],[],[]],
-    [["(", PT.params, ")", PT.compound_stmt],[],["[", TokenType.NUM, "]", ";"],[],[";"],[",", TokenType.ID, PT.dec_p],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]],
+    [["(", PT.params, ")", PT.compound_stmt],[],["[", TokenType.NUM, "]", ";"],[],[";"],[",", TokenType.ID, PT.dec_p],[],[],["=", TokenType.NUM, ";"],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]],
     [[],[],[],[],[],[],[],[],[],[],[],[],[],["int"],["void"],[],[],[],[],[],[],[],[],[],[],[],[],[]],
     [[],[],[],[],[],[],[],[],[],[],[],[],[],[PT.param_list],["void"],[],[],[],[],[],[],[],[],[],[],[],[],[]],
     [[],[],[],[],[],[],[],[],[],[],[],[],[],[PT.param, PT.param_list_p],[PT.param, PT.param_list_p],[],[],[],[],[],[],[],[],[],[],[],[],[]],
@@ -207,7 +210,8 @@ parsingTable = [
     [[],[],[],[],[],[],["{", PT.local_decs, PT.stmt_list, "}"],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]],
     [[PT.lambda_pass],[],[],[],[PT.lambda_pass],[],[PT.lambda_pass],[PT.lambda_pass],[],[PT.lambda_pass],[],[PT.lambda_pass],[PT.lambda_pass],[PT.var_dec, PT.local_decs],[PT.var_dec, PT.local_decs],[],[],[],[],[],[],[],[],[],[],[PT.lambda_pass],[PT.lambda_pass],[]],
     [[],[],[],[],[],[],[],[],[],[],[],[],[],[PT.type_specifier, TokenType.ID, PT.var_dec_p],[PT.type_specifier, TokenType.ID, PT.var_dec_p],[],[],[],[],[],[],[],[],[],[],[],[],[]],
-    [[],[],["[", TokenType.NUM, "]", ";"],[],[";"],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]],
+    [[],[],["[", TokenType.NUM, "]", ";"],[],[";"],[",", TokenType.ID, PT.var_dec_p],[],[],["=", PT.asg_dec_p, ";"],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]],
+    [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[TokenType.ID],[TokenType.NUM],[]],
     [[PT.stmt, PT.stmt_list],[],[],[],[PT.stmt, PT.stmt_list],[],[PT.stmt, PT.stmt_list],[PT.lambda_pass],[],[PT.stmt, PT.stmt_list],[],[PT.stmt, PT.stmt_list],[PT.stmt, PT.stmt_list],[],[],[],[],[],[],[],[],[],[],[],[],[PT.stmt, PT.stmt_list],[PT.stmt, PT.stmt_list],[]],
     [[PT.expr_stmt],[],[],[],[PT.expr_stmt],[],[PT.compound_stmt],[],[],[PT.selection_stmt],[],[PT.iteration_stmt],[PT.return_stmt],[],[],[],[],[],[],[],[],[],[],[],[],[PT.expr_stmt],[PT.expr_stmt],[]],
     [[PT.expr, ";"],[],[],[],[";"],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[PT.expr, ";"],[PT.expr, ";"],[]],
@@ -235,3 +239,102 @@ parsingTable = [
     [[PT.expr, PT.arg_list_p],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[PT.expr, PT.arg_list_p],[PT.expr, PT.arg_list_p],[]],
     [[],[PT.lambda_pass],[],[],[],[",", PT.expr, PT.arg_list_p],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]],
 ]
+
+"""
+context-free grammar for C-:
+
+<program> ::= <declaration-list>
+
+<declaration-list> ::= <declaration> <declaration-list> | ε
+
+<declaration> ::= <type-specifier> ID <declaration-prime>
+
+<declaration-prime> ::= ';' 
+                      | '[' NUM ']' ';' 
+                      | '(' <params> ')' <compound-stmt> 
+                      | ',' ID <declaration-prime> 
+                      | '=' NUM ';'
+
+<type-specifier> ::= 'int' | 'void'
+
+<params> ::= 'void' | <param-list>
+
+<param-list> ::= <param> <param-list-prime>
+
+<param-list-prime> ::= ',' <param> <param-list-prime> | ε
+
+<param> ::= <type-specifier> ID <param-prime>
+
+<param-prime> ::= '[' ']' | ε
+
+<compound-stmt> ::= '{' <local-declarations> <statement-list> '}'
+
+<local-declarations> ::= <var-declaration> <local-declarations> | ε
+
+<var-declaration> ::= <type-specifier> ID <var-declaration-prime>
+
+<var-declaration-prime> ::= ';' 
+                          | '[' NUM ']' ';' 
+                          | ',' ID <var-declaration-prime> 
+                          | '=' <asg-declaration-prime> ';'
+
+<asg-declaration-prime> ::= ID | NUM
+
+<statement-list> ::= <statement> <statement-list> | ε
+
+<statement> ::= <expression-stmt> 
+              | <compound-stmt> 
+              | <selection-stmt> 
+              | <iteration-stmt> 
+              | <return-stmt>
+
+<expression-stmt> ::= <expression> ';' | ';'
+
+<selection-stmt> ::= 'if' '(' <expression> ')' <statement> <selection-stmt-prime>
+
+<selection-stmt-prime> ::= 'else' <statement> | ε
+
+<iteration-stmt> ::= 'while' '(' <expression> ')' <statement>
+
+<return-stmt> ::= 'return' <return-stmt-prime>
+
+<return-stmt-prime> ::= ';' | <expression> ';'
+
+<expression> ::= <simple-expression> <expression-prime>
+
+<expression-prime> ::= '=' <expression> | ε
+
+<var> ::= ID <var-prime>
+
+<var-prime> ::= '[' <expression> ']' | ε
+
+<simple-expression> ::= <additive-expression> <simple-expression-prime>
+
+<simple-expression-prime> ::= <relop> <additive-expression> | ε
+
+<relop> ::= '<' | '<=' | '>' | '>=' | '==' | '!='
+
+<additive-expression> ::= <term> <additive-expression-prime>
+
+<additive-expression-prime> ::= <addop> <term> <additive-expression-prime> | ε
+
+<addop> ::= '+' | '-'
+
+<term> ::= <factor> <term-prime>
+
+<term-prime> ::= <mulop> <factor> <term-prime> | ε
+
+<mulop> ::= '*' | '/'
+
+<factor> ::= '(' <expression> ')' 
+           | ID <factor-prime> 
+           | NUM
+
+<factor-prime> ::= '(' <args> ')' | <var-prime>
+
+<args> ::= <arg-list> | ε
+
+<arg-list> ::= <expression> <arg-list-prime>
+
+<arg-list-prime> ::= ',' <expression> <arg-list-prime> | ε
+"""

@@ -64,6 +64,8 @@ def getToken(imprime = True):
 
     # Recorrer caracter por caracter
     while True:
+        if programa[posicion] == '\n':
+            line += 1
         # print(f"posicion: {posicion}, token: {token.name}, ch: {programa[posicion]}")
         if token == TokenType.UNDECLARED:
             if programa[posicion] == "/" and posicion < progLong - 1:
@@ -81,7 +83,9 @@ def getToken(imprime = True):
                 token = TokenType.OPS
 
             elif programa[posicion] in TokenType.COMP.value + TokenType.ASG.value and posicion < progLong - 1:
-                if programa[posicion+1] == "=":
+                if programa[posicion] in TokenType.COMP.value:
+                    token = TokenType.COMP
+                elif programa[posicion+1] == "=":
                     token = TokenType.COMP
                 else:
                     tokenString += programa[posicion]
@@ -97,8 +101,6 @@ def getToken(imprime = True):
             
             # A blank space, new line or tab is found: SKIP
             elif programa[posicion] in TokenType.UNDECLARED.value:
-                if programa[posicion] == '\n':
-                    line += 1
                 posicion += 1           
 
             else:
@@ -107,6 +109,7 @@ def getToken(imprime = True):
         else:
             # Store everything that is within the comment
             if token == TokenType.COMMENT:
+                if programa[posicion] == '\n':line += 1
                 if(posicion >= progLong):
                     printError(tokenString)
                     return TokenType.ERROR, tokenString, line
