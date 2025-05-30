@@ -1,0 +1,9 @@
+Assemble: assembling \Compilador\file.s
+
+Error in \Compilador\file.s line 13 column 12: "None": operand is of incorrect type
+Error in \Compilador\file.s line 20 column 12: "None": operand is of incorrect type
+Error in \Compilador\file.s line 27 column 12: "None": operand is of incorrect type
+Error in \Compilador\file.s line 34 column 12: "None": operand is of incorrect type
+Error in \Compilador\file.s line 41 column 12: "None": operand is of incorrect type
+Error in \Compilador\file.s line 48 column 12: "None": operand is of incorrect type
+Assemble: operation completed with errors.

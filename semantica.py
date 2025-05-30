@@ -108,7 +108,7 @@ def debug_print(node, lst = []):
         nodetest = node
         return
 
-    print(f"UNUNUNUNUNUNUNUNUNUNUNUNUNUNNUN~{node.symbol}:", end=" ")
+    print(f"{node.line}.UNUNUNUNUNUNUNUNUNUNUNUNUNNUN~{nodetest.symbol}:", end=" ")
     for child in nodetest.children:
         print(f"{child.symbol}", end=", ")
     print("")
@@ -347,6 +347,9 @@ def tabla(tree_root, imprime=True):
     symbol_tables = []
     symbol_tables.append(SymbolTable()) # Add the global table
 
+    # symbol_tables[0].elements.append(TableElement(DecElement("input", None, None), "function", None, [], None, None))
+    # symbol_tables[0].elements.append(TableElement(DecElement("output", None, None), "function", None, [], None, None))
+
     pre_order(tree_root)
     
     if imprime:
@@ -456,6 +459,25 @@ def check_argument_compatibility(arg_node, expected_type, expected_array, param_
             print(f"Error: Undefined variable '{arg_name}' used as argument {arg_num} in call to '{func_name}' on line {line}")
             return
             
+        # Check if array is being used with indexing
+        var_p = get_node(arg_node.parent, [PT.factor_p, PT.var_p])
+        if var_p and var_p.children:
+            # Check if var_p has the array indexing structure: [ expr ]
+            has_indexing = False
+            if len(var_p.children) >= 3:
+                if var_p.children[0].symbol == "[" and var_p.children[2].symbol == "]":
+                    expr_node = var_p.children[1]
+                    if expr_node.symbol == PT.expr:
+                        has_indexing = True
+            
+            if has_indexing:
+                # Array is properly indexed, treat it as a regular int
+                if expected_array:
+                    print(f"Error: Function '{func_name}' call on line {line} has wrong argument order. "
+                          f"Parameter {arg_num} ('{param_name}') expects an array but got indexed array '{arg_name}[...]'. "
+                          f"Did you mean to pass the array as the first argument?")
+                return
+        
         # Array compatibility check
         if expected_array and not arg_is_array:
             print(f"Error: Function '{func_name}' call on line {line} has wrong argument order. "
@@ -475,6 +497,9 @@ def check_argument_compatibility(arg_node, expected_type, expected_array, param_
         if expected_array:
             print(f"Error: Function '{func_name}' parameter {arg_num} ('{param_name}') "
                   f"expects an array but got a number literal on line {line}")
+        elif expected_type != "int":
+            print(f"Error: Function '{func_name}' parameter {arg_num} ('{param_name}') type mismatch: "
+                  f"expected {expected_type} but got int on line {line}")
 
 def get_parent_node(node, symbols):
     """
@@ -868,7 +893,15 @@ def semantica(tree_root, imprime = True):
     # Build symbol tables
     symbol_tables = tabla(tree_root[0], imprime)
 
+    # Add built-in functions to global symbol table
+    input_dec = DecElement("input", "int")
+    output_dec = DecElement("output", "void")
+    symbol_tables[0].elements.append(TableElement(input_dec, "function", None, [], None, "int"))
+    symbol_tables[0].elements.append(TableElement(output_dec, "function", None, [DecElement("value", "int")], None, "void"))
+
     print("\nSemantic Check\n" + "-"*50)
 
     semantic_preStep(tree_root[0])
+
+    return symbol_tables
     

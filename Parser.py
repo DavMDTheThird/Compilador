@@ -63,15 +63,13 @@ class ASTNode:
         return ret
     
 def print_ast1(node, level=0):
-    indent = "  " * level
+    indent = f"line:{node.line} " + "  " * level
 
     if isinstance(node.symbol, PT):
+        print(f"{indent}{level}.{node.symbol}")
         pass
-        print(f"{indent}{level}.{node.symbol.name}")
     else:
-        level += 1
-        indent = "  " * level
-        print(f"{indent}{node.symbol}")
+        print(f"{indent}{level}.{node.symbol}")
     for child in node.children:
         print_ast1(child, level+1)
 
@@ -183,7 +181,7 @@ def parser(imprime=True):
             print(f"The program parsed correctly")
 
             if imprime:
-                print_ast1(root_node, imprime)
+                print_ast1(root_node)
 
             parsing_order = get_order(root_node)
 

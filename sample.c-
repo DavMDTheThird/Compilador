@@ -32,18 +32,6 @@
       }
   }
 
-  void f(void){return ;}
-  void test(void){
-    int a[10];
-    int b;
-    int x;
-
-    while(x < a){
-
-    }
-    return x;
-  }
-
   void main(void)
   { int i;
     i = 0;
